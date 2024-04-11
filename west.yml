@@ -23,6 +23,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: babblesim
       url-base: https://github.com/BabbleSim
+    - name: mcu-tools
+      url-base: https://github.com/mcu-tools
 
   group-filter: [-babblesim, -optional]
 
@@ -282,7 +284,8 @@ manifest:
       groups:
         - crypto
     - name: mcuboot
-      revision: 78bfe750cde0f8dfcf81bb4c0a68243d45906def
+      remote: mcu-tools
+      revision: d4394c2f9b76e0a7b758441cea3a8ceb896f66c8
       path: bootloader/mcuboot
     - name: mipi-sys-t
       path: modules/debug/mipi-sys-t
