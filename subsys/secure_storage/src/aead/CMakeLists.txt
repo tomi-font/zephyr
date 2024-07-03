@@ -16,6 +16,3 @@ zephyr_sources_ifdef(CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_NONCE_PSA_SEED_COUNTER
 zephyr_sources_ifdef(CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_KEY_HASH_UID
 	aead_key_hash.c
 )
-zephyr_sources_ifdef(CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_KEY_DERIVE_FROM_HUK
-	aead_key_huk.c
-)

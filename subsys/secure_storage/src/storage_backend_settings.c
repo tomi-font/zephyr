@@ -28,6 +28,17 @@ struct load_object_info {
 	int ret;
 };
 
+static int init_settings(void)
+{
+	int ret = settings_subsys_init();
+
+	if (ret != 0) {
+		LOG_DBG("Failed to initialize the settings subsystem. (%d)", ret);
+	}
+	return ret;
+}
+SYS_INIT(init_settings, APPLICATION, CONFIG_APPLICATION_INIT_PRIORITY);
+
 /* Helper to fill filename with a suffix */
 static psa_status_t create_filename(char *filename, const size_t filename_size, const char *prefix,
 				    const psa_storage_uid_t uid)

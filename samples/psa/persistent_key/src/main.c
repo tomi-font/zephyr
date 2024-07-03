@@ -15,8 +15,6 @@
 #include <tfm_ns_interface.h>
 #endif
 
-#include "trusted_storage_init.h"
-
 #define APP_SUCCESS	    (0)
 #define APP_ERROR	    (-1)
 #define APP_SUCCESS_MESSAGE "Example finished successfully!"
@@ -56,10 +54,6 @@ static uint8_t m_decrypted_text[NRF_CRYPTO_EXAMPLE_PERSISTENT_KEY_MAX_TEXT_SIZE]
 int crypto_init(void)
 {
 	psa_status_t status;
-
-#ifdef CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_KEY_DERIVE_FROM_HUK
-	write_huk();
-#endif /* CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_KEY_DERIVE_FROM_HUK */
 
 	/* Initialize PSA Crypto */
 	status = psa_crypto_init();

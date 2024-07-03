@@ -8,8 +8,6 @@
 #include <psa/internal_trusted_storage.h>
 #include <zephyr/logging/log.h>
 
-#include "trusted_storage_init.h"
-
 #define APP_SUCCESS	    (0)
 #define APP_ERROR	    (-1)
 #define APP_SUCCESS_MESSAGE "Example finished successfully!"
@@ -107,10 +105,6 @@ int write_and_read(void)
 int main(void)
 {
 	LOG_INF("Starting PSA ITS example...");
-
-#ifdef CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_KEY_DERIVE_FROM_HUK
-	write_huk();
-#endif /* CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_KEY_DERIVE_FROM_HUK */
 
 	psa_status_t status = psa_crypto_init();
 

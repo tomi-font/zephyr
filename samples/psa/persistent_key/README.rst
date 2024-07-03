@@ -46,9 +46,6 @@ The sample performs the following operations:
    The key ID of a read-only key is writable again after a full erase of the device memory.
    Use the ``west -v flash --erase`` command for the full erase.
 
-.. note::
-   Builds without TF-M and all nRF54L15 builds use the :ref:`hardware unique key (HUK) <lib_hw_unique_key>` to encrypt the key before storing it.
-
 Building and running
 ********************
 
