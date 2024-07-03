@@ -159,7 +159,10 @@ choice TRUSTED_STORAGE_STORAGE_BACKEND
 
 config TRUSTED_STORAGE_STORAGE_BACKEND_SETTINGS
 	bool "Settings storage backend"
-	depends on SETTINGS_NVS
+	select FLASH
+	select FLASH_MAP
+	select NVS
+	select SETTINGS
 	help
 	  Use the Settings subsystem with NVS to store the assets
 
