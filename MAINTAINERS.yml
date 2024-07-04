@@ -4719,6 +4719,8 @@ West:
     - modules/mbedtls/
   labels:
     - "area: Crypto / RNG"
+  tests:
+    - psa
 
 "West project: mcuboot":
   status: maintained
@@ -4886,6 +4888,8 @@ West:
     - modules/trusted-firmware-m/
   labels:
     - "area: TF-M"
+  tests:
+    - psa
 
 "West project: tf-m-tests":
   status: maintained
