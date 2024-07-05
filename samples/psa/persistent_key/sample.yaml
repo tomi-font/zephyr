@@ -1,6 +1,6 @@
 sample:
   name: PSA persistent key sample
-  description: Demonstration of persistent key usage with PSA.
+  description: Demonstration of persistent key usage with PSA Crypto API.
 common:
   tags:
     - psa
@@ -9,11 +9,11 @@ common:
   harness_config:
     type: one_line
     regex:
-      - "Example finished successfully!"
+      - "Sample finished successfully."
 tests:
   sample.psa.persistent_key.secure_storage.entropy_driver:
     filter: not CONFIG_BUILD_WITH_TFM and CONFIG_ENTROPY_HAS_DRIVER
-    integration_platforms:
+    integration_platforms: &secure_storage_integration_platforms
       - native_sim
       - nrf52840dk/nrf52840
     extra_args: EXTRA_CONF_FILE=overlay-secure_storage.conf;overlay-entropy_driver.conf
@@ -22,9 +22,7 @@ tests:
       - settings
   sample.psa.persistent_key.secure_storage.entropy_not_secure:
     filter: not CONFIG_BUILD_WITH_TFM and not CONFIG_ENTROPY_HAS_DRIVER
-    integration_platforms:
-      - native_sim
-      - nrf52840dk/nrf52840
+    integration_platforms: *secure_storage_integration_platforms
     extra_args: EXTRA_CONF_FILE="overlay-secure_storage.conf"
     extra_configs:
       - CONFIG_TEST_RANDOM_GENERATOR=y

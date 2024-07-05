@@ -1,196 +1,129 @@
-/*
- * Copyright (c) 2021 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
+/* SPDX-License-Identifier: Apache-2.0 */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/logging/log.h>
-#include <stdio.h>
 #include <psa/crypto.h>
-#include <psa/crypto_extra.h>
+#include <zephyr/logging/log.h>
 
-#ifdef CONFIG_BUILD_WITH_TFM
-#include <tfm_ns_interface.h>
-#endif
+LOG_MODULE_REGISTER(persistent_key);
 
-#define APP_SUCCESS	    (0)
-#define APP_ERROR	    (-1)
-#define APP_SUCCESS_MESSAGE "Example finished successfully!"
-#define APP_ERROR_MESSAGE   "Example exited with error!"
-
-#define PRINT_HEX(p_label, p_text, len)                                                            \
-	({                                                                                         \
-		LOG_INF("---- %s (len: %u): ----", p_label, len);                                  \
-		LOG_HEXDUMP_INF(p_text, len, "Content:");                                          \
-		LOG_INF("---- %s end  ----", p_label);                                             \
-	})
-
-LOG_MODULE_REGISTER(persistent_key_usage, LOG_LEVEL_DBG);
-
-/* ====================================================================== */
-/*			Global variables/defines for the persistent key  example	  */
-
-/* The key id for the persistent key. The macros PSA_KEY_ID_USER_MIN and
- * PSA_KEY_ID_USER_MAX define the range of freely available key ids.
- */
-#define SAMPLE_PERS_KEY_ID				PSA_KEY_ID_USER_MIN
-#define SAMPLE_KEY_TYPE					PSA_KEY_TYPE_AES
-#define SAMPLE_ALG					PSA_ALG_CTR
-#define NRF_CRYPTO_EXAMPLE_PERSISTENT_KEY_MAX_TEXT_SIZE (100)
-
-static psa_key_id_t key_id;
-
-/* Below text is used as plaintext for encryption/decryption */
-static uint8_t m_plain_text[NRF_CRYPTO_EXAMPLE_PERSISTENT_KEY_MAX_TEXT_SIZE] = {
-	"Example string to demonstrate basic usage of a persistent key."};
-
-static uint8_t m_encrypted_text[PSA_CIPHER_ENCRYPT_OUTPUT_SIZE(
-	SAMPLE_KEY_TYPE, SAMPLE_ALG, NRF_CRYPTO_EXAMPLE_PERSISTENT_KEY_MAX_TEXT_SIZE)];
-static uint8_t m_decrypted_text[NRF_CRYPTO_EXAMPLE_PERSISTENT_KEY_MAX_TEXT_SIZE];
-/* ====================================================================== */
-
-int crypto_init(void)
-{
-	psa_status_t status;
-
-	/* Initialize PSA Crypto */
-	status = psa_crypto_init();
-	if (status != PSA_SUCCESS) {
-		return APP_ERROR;
-	}
-
-	return APP_SUCCESS;
-}
-
-int crypto_finish(void)
-{
-	psa_status_t status;
-
-	/* Destroy the key handle */
-	status = psa_destroy_key(key_id);
-	if (status != PSA_SUCCESS) {
-		LOG_INF("psa_destroy_key failed! (Error: %d)", status);
-		return APP_ERROR;
-	}
-
-	return APP_SUCCESS;
-}
+#define SAMPLE_KEY_ID   PSA_KEY_ID_USER_MIN
+#define SAMPLE_KEY_TYPE PSA_KEY_TYPE_AES
+#define SAMPLE_ALG      PSA_ALG_CTR
+#define SAMPLE_KEY_BITS 256
 
 int generate_persistent_key(void)
 {
-	psa_status_t status;
-
-	LOG_INF("Generating random persistent AES key...");
-
-	/* Configure the key attributes */
+	LOG_INF("Generating a persistent key...");
+	psa_status_t ret;
+	psa_key_id_t key_id;
 	psa_key_attributes_t key_attributes = PSA_KEY_ATTRIBUTES_INIT;
 
-	psa_set_key_usage_flags(&key_attributes, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
-	psa_set_key_algorithm(&key_attributes, SAMPLE_ALG);
-	psa_set_key_type(&key_attributes, SAMPLE_KEY_TYPE);
-	psa_set_key_bits(&key_attributes, 128);
-
-	/* Persistent key specific settings */
 	psa_set_key_lifetime(&key_attributes, PSA_KEY_LIFETIME_PERSISTENT);
-	psa_set_key_id(&key_attributes, SAMPLE_PERS_KEY_ID);
+	psa_set_key_usage_flags(&key_attributes, PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT);
+	psa_set_key_id(&key_attributes, SAMPLE_KEY_ID);
+	psa_set_key_type(&key_attributes, SAMPLE_KEY_TYPE);
+	psa_set_key_algorithm(&key_attributes, SAMPLE_ALG);
+	psa_set_key_bits(&key_attributes, SAMPLE_KEY_BITS);
 
-	/* Generate a random AES key with persistent lifetime. The key can be used for
-	 * encryption/decryption using the key_id.
-	 */
-	status = psa_generate_key(&key_attributes, &key_id);
-	if (status != PSA_SUCCESS) {
-		LOG_INF("psa_generate_key failed! (Error: %d)", status);
-		return APP_ERROR;
+	ret = psa_generate_key(&key_attributes, &key_id);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to generate the key. (%d)", ret);
+		return -1;
+	}
+	__ASSERT_NO_MSG(key_id == SAMPLE_KEY_ID);
+
+	/* Purge the key from volatile memory. Has the same affect than resetting the device. */
+	ret = psa_purge_key(SAMPLE_KEY_ID);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to purge the generated key. (%d).", ret);
+		return -1;
 	}
 
-	/* Make sure the key is not in memory anymore, has the same affect then resetting the device
-	 */
-	status = psa_purge_key(key_id);
-	if (status != PSA_SUCCESS) {
-		LOG_INF("psa_purge_key failed! (Error: %d)", status);
-		return APP_ERROR;
-	}
-
-	/* After the key handle is acquired the attributes are not needed */
-	psa_reset_key_attributes(&key_attributes);
-
-	LOG_INF("Persistent key generated successfully!");
-
-	return APP_SUCCESS;
+	LOG_INF("Persistent key generated.");
+	return 0;
 }
 
 int use_persistent_key(void)
 {
-	uint32_t olen;
-	psa_status_t status;
+	LOG_INF("Using the persistent key to encrypt and decrypt some plaintext...");
+	psa_status_t ret;
+	uint32_t ciphertext_len;
+	uint32_t decrypted_text_len;
 
-	status = psa_cipher_encrypt((psa_key_id_t)SAMPLE_PERS_KEY_ID, SAMPLE_ALG, m_plain_text,
-				    sizeof(m_plain_text), m_encrypted_text,
-				    sizeof(m_encrypted_text), &olen);
-	if (status != PSA_SUCCESS) {
-		LOG_INF("psa_cipher_encrypt failed! (Error: %d)", status);
-		return APP_ERROR;
+	static uint8_t plaintext[100] =
+		"Example plaintext to demonstrate basic usage of a persistent key.";
+	static uint8_t ciphertext[PSA_CIPHER_ENCRYPT_OUTPUT_SIZE(SAMPLE_KEY_TYPE, SAMPLE_ALG,
+								 sizeof(plaintext))];
+	static uint8_t decrypted_text[sizeof(plaintext)];
+
+	ret = psa_cipher_encrypt(SAMPLE_KEY_ID, SAMPLE_ALG, plaintext, sizeof(plaintext),
+				 ciphertext, sizeof(ciphertext), &ciphertext_len);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to encrypt the plaintext. (%d)", ret);
+		return -1;
 	}
 
-	LOG_INF("Encryption successful!");
-	PRINT_HEX("Plaintext", m_plain_text, sizeof(m_plain_text));
-	PRINT_HEX("Encrypted text", m_encrypted_text, sizeof(m_encrypted_text));
+	ret = psa_cipher_decrypt(SAMPLE_KEY_ID, SAMPLE_ALG, ciphertext, ciphertext_len,
+				 decrypted_text, sizeof(decrypted_text), &decrypted_text_len);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to decrypt the ciphertext. (%d)", ret);
+		return -1;
+	}
+	__ASSERT_NO_MSG(decrypted_text_len == sizeof(plaintext));
 
-	status = psa_cipher_decrypt((psa_key_id_t)SAMPLE_PERS_KEY_ID, SAMPLE_ALG, m_encrypted_text,
-				    sizeof(m_encrypted_text), m_decrypted_text,
-				    sizeof(m_decrypted_text), &olen);
-	if (status != PSA_SUCCESS) {
-		LOG_INF("psa_cipher_decrypt failed! (Error: %d)", status);
-		return APP_ERROR;
+	/* Check that the decryption gives us the original plaintext back. */
+	if (memcmp(plaintext, decrypted_text, sizeof(plaintext))) {
+		LOG_HEXDUMP_INF(plaintext, sizeof(plaintext), "Plaintext:");
+		LOG_HEXDUMP_INF(ciphertext, ciphertext_len, "Ciphertext:");
+		LOG_HEXDUMP_INF(decrypted_text, sizeof(decrypted_text), "Decrypted plaintext:");
+		LOG_ERR("The decrypted text doesn't match the plaintext.");
+		return -1;
 	}
 
-	PRINT_HEX("Decrypted text", m_decrypted_text, sizeof(m_decrypted_text));
+	LOG_INF("Persistent key usage successful.");
+	return 0;
+}
 
-	/* Check the validity of the decryption */
-	if (memcmp(m_decrypted_text, m_plain_text,
-		   NRF_CRYPTO_EXAMPLE_PERSISTENT_KEY_MAX_TEXT_SIZE) != 0) {
-		LOG_INF("Error: Decrypted text doesn't match the plaintext");
-		return APP_ERROR;
+static int destroy_persistent_key(void)
+{
+	LOG_INF("Destroying the persistent key...");
+	psa_status_t ret;
+
+	ret = psa_destroy_key(SAMPLE_KEY_ID);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to destroy the key. (%d)", ret);
+		return -1;
 	}
 
-	LOG_INF("Decryption successful!");
+	ret = psa_destroy_key(SAMPLE_KEY_ID);
+	if (ret != PSA_ERROR_INVALID_HANDLE) {
+		LOG_ERR("Unexpected psa_destroy_key() return value when"
+			" destroying the key a second time. (%d)", ret);
+		return -1;
+	}
 
-	return APP_SUCCESS;
+	LOG_INF("Persistent key destroyed.");
+	return 0;
 }
 
 int main(void)
 {
-	int status;
+	LOG_INF("Persistent key sample started.");
 
-	LOG_INF("Starting persistent key example...");
+	/* Ensure there is not already a key with this ID. */
+	psa_destroy_key(SAMPLE_KEY_ID);
 
-	status = crypto_init();
-	if (status != APP_SUCCESS) {
-		LOG_INF(APP_ERROR_MESSAGE);
-		return APP_ERROR;
+	if (generate_persistent_key()) {
+		return -1;
 	}
 
-	status = generate_persistent_key();
-	if (status != APP_SUCCESS) {
-		LOG_INF(APP_ERROR_MESSAGE);
-		return APP_ERROR;
+	if (use_persistent_key()) {
+		return -1;
 	}
 
-	status = use_persistent_key();
-	if (status != APP_SUCCESS) {
-		LOG_INF(APP_ERROR_MESSAGE);
-		return APP_ERROR;
+	if (destroy_persistent_key()) {
+		return -1;
 	}
 
-	status = crypto_finish();
-	if (status != APP_SUCCESS) {
-		LOG_INF(APP_ERROR_MESSAGE);
-		return APP_ERROR;
-	}
-
-	LOG_INF(APP_SUCCESS_MESSAGE);
-
-	return APP_SUCCESS;
+	LOG_INF("Sample finished successfully.");
+	return 0;
 }

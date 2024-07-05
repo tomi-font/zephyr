@@ -1,129 +1,121 @@
-/*
- * Copyright (c) 2024 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
+/* SPDX-License-Identifier: Apache-2.0 */
 
 #include <psa/crypto.h>
 #include <psa/internal_trusted_storage.h>
 #include <zephyr/logging/log.h>
 
-#define APP_SUCCESS	    (0)
-#define APP_ERROR	    (-1)
-#define APP_SUCCESS_MESSAGE "Example finished successfully!"
+LOG_MODULE_REGISTER(psa_its);
 
-LOG_MODULE_REGISTER(psa_its, LOG_LEVEL_DBG);
+#define SAMPLE_DATA_UID (psa_storage_uid_t)1
 
-int write_wrong_uid(void)
+static int read_inexistent_uid(void)
 {
-	psa_status_t status;
+	LOG_INF("Verifying that reading an inexistent UID will fail...");
+	psa_status_t ret;
 
-	LOG_INF("Verify that reading the wrong UID will fail");
+	/* Read from the start of the entry. */
+	const uint32_t data_offset = 0;
 
-	psa_storage_uid_t non_existent_uid = 0x5EB01234;
-
-	/* Read from the start of the entry */
-	uint32_t data_offset = 0;
-
-	/* Read 4 bytes */
-	uint32_t data_length = 4;
-
-	/* Write the result from psa_its_get to p_data */
+	/* The buffer to which the data read is written. */
 	uint8_t p_data[4];
 
-	/* Number of bytes written to p_data */
-	size_t p_data_length = 0x5EB0;
+	/* Number of bytes written. */
+	size_t p_data_length;
 
-	status = psa_its_get(non_existent_uid, data_offset, data_length, p_data, &p_data_length);
-
-	if (status == 0) {
-		LOG_ERR("Expected psa_its_get with the wrong UID to fail, but it "
-			"succeeded.");
-		return APP_ERROR;
+	ret = psa_its_get(SAMPLE_DATA_UID, data_offset, sizeof(p_data), p_data, &p_data_length);
+	if (ret != PSA_ERROR_DOES_NOT_EXIST) {
+		LOG_ERR("Unexpected psa_its_get() return value. (%d)", ret);
+		return -1;
 	}
 
-	LOG_INF("psa_its_get correctly returned an error code when we intentionally read "
-		"the wrong UID");
-
-	return APP_SUCCESS;
+	LOG_INF("Attempting to read an inexistent UID correctly failed.");
+	return 0;
 }
 
-int write_and_read(void)
+static int write_and_read_data(void)
 {
-	psa_status_t status;
+	LOG_INF("Writing to and reading back from ITS...");
+	psa_status_t ret;
 
-	LOG_INF("Write to ITS and then check that we can read it back");
+	/* Data to be written to ITS. */
+	uint8_t p_data_write[16];
 
-	psa_storage_uid_t new_uid = 0x5EB00000;
+	/* Storage flags for the entry. */
+	const psa_storage_create_flags_t create_flags = PSA_STORAGE_FLAG_NONE;
 
-	/* Data to be written to ITS */
-	uint8_t p_data_write[1] = {42};
+	memset(p_data_write, 0x42, sizeof(p_data_write));
 
-	/* permission flags for ITS entry */
-	psa_storage_create_flags_t create_flags = PSA_STORAGE_FLAG_NONE;
-
-	status = psa_its_set(new_uid, sizeof(p_data_write), p_data_write, create_flags);
-
-	if (status) {
-		LOG_ERR("Unable to write to ITS");
-		LOG_ERR("psa_its_get returned psa_status_t: %d", status);
-		return APP_ERROR;
+	ret = psa_its_set(SAMPLE_DATA_UID, sizeof(p_data_write), p_data_write, create_flags);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Writing the data to ITS failed. (%d)", ret);
+		return -1;
 	}
 
-	/* Write the 'new_uid' entry in ITS to this buffer */
-	uint8_t p_data_read[1];
+	/* Data to be read from ITS. */
+	uint8_t p_data_read[sizeof(p_data_write)];
 
-	/* Read from the start of the entry */
+	/* Read from the start of the entry. */
 	uint32_t data_offset = 0;
 
-	/* Read 1 byte */
-	uint32_t data_length = 1;
+	/* Number of bytes read. */
+	size_t p_data_length = 0;
 
-	/* Number of bytes written to p_data */
-	size_t p_data_length = 0xc0ffe;
-
-	status = psa_its_get(new_uid, data_offset, data_length, p_data_read, &p_data_length);
-	if (status) {
-		LOG_ERR("Unable to read back from ITS");
-		LOG_ERR("psa_its_get returned psa_status_t: %d", status);
-		return APP_ERROR;
+	ret = psa_its_get(SAMPLE_DATA_UID, data_offset, sizeof(p_data_read), p_data_read,
+			  &p_data_length);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Reading back the data from ITS failed. (%d).", ret);
+		return -1;
 	}
 
-	if (p_data_length != 1) {
-		LOG_ERR("Unable to read the correct amount of bytes from ITS");
+	if (p_data_length != sizeof(p_data_read)) {
+		LOG_ERR("Unexpected amount of bytes read back. (%zu != %zu)",
+			p_data_length, sizeof(p_data_read));
+		return -1;
 	}
 
-	if (p_data_read[0] != 42) {
-		LOG_ERR("Read the wrong value back from ITS");
+	if (memcmp(p_data_write, p_data_read, sizeof(p_data_read))) {
+		LOG_HEXDUMP_ERR(p_data_read, sizeof(p_data_read), "Wrong data read back:");
+		return -1;
 	}
 
-	LOG_INF("Successfully wrote to ITS and read back what was written");
+	LOG_INF("Successfully wrote to ITS and read back what was written.");
+	return 0;
+}
 
-	return APP_SUCCESS;
+static int remove_entry(void)
+{
+	LOG_INF("Removing the entry from ITS...");
+	psa_status_t ret;
+
+	ret = psa_its_remove(SAMPLE_DATA_UID);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to remove the entry. (%d)", ret);
+		return -1;
+	}
+
+	LOG_INF("Entry removed from ITS.");
+	return 0;
 }
 
 int main(void)
 {
-	LOG_INF("Starting PSA ITS example...");
+	LOG_INF("PSA ITS sample started.");
 
-	psa_status_t status = psa_crypto_init();
+	/* Ensure there is not already an entry with this UID. */
+	psa_its_remove(SAMPLE_DATA_UID);
 
-	if (status) {
-		LOG_INF("psa_crypto_init failed");
-		return 1;
+	if (read_inexistent_uid()) {
+		return -1;
 	}
 
-	status = write_wrong_uid();
-	if (status) {
-		return APP_ERROR;
+	if (write_and_read_data()) {
+		return -1;
 	}
 
-	status = write_and_read();
-	if (status) {
-		return APP_ERROR;
+	if (remove_entry()) {
+		return -1;
 	}
 
-	LOG_INF(APP_SUCCESS_MESSAGE);
-
-	return APP_SUCCESS;
+	LOG_INF("Sample finished successfully.");
+	return 0;
 }
