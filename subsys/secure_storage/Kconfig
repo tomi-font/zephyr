@@ -1,26 +1,21 @@
-#
-# Copyright (c) 2018 - 2023 Nordic Semiconductor
-#
-# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
-#
+# SPDX-License-Identifier: Apache-2.0
 
-# Secure storage subsystem configuration options
-
-menuconfig TRUSTED_STORAGE
-	bool "Trusted Storage"
+menuconfig SECURE_STORAGE
+	bool "Secure storage subsystem"
 	depends on !BUILD_WITH_TFM
 	help
-	  The secure storage subsystem allows its users to store in a secure
-	  way data ensuring data integrity and confidentially by using AEAD
-	  algorithms. It supports several secure implementation back-ends to
-	  provide various levels of trust depending on the device security
-	  features.
+	  The secure storage subsystem allows securely storing data via the
+	  PSA Secure Storage API on platforms that don't already have an implementation of it.
+	  It is configurable with different backends for both securing and storing
+	  of the data to suit the varying capabilities of different platforms.
+	  The actual security provided depends on the security features that
+	  are available and used on a given platform.
 
-if TRUSTED_STORAGE
-module = TRUSTED_STORAGE
-module-str = trusted_storage
+if SECURE_STORAGE
+
+module = SECURE_STORAGE
+module-str = secure_storage
 source "subsys/logging/Kconfig.template.log_config"
-
 
 menuconfig PSA_PROTECTED_STORAGE
 	bool "Protected Storage"
@@ -162,4 +157,4 @@ config TRUSTED_STORAGE_STORAGE_BACKEND_CUSTOM
 
 endchoice # CONFIG_TRUSTED_STORAGE_STORAGE_BACKEND
 
-endif # TRUSTED_STORAGE
+endif # SECURE_STORAGE

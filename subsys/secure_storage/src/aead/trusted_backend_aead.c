@@ -7,7 +7,7 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/logging/log.h>
 #include <mbedtls/platform_util.h>
-LOG_MODULE_REGISTER(internal_trusted_aead, CONFIG_TRUSTED_STORAGE_LOG_LEVEL);
+LOG_MODULE_REGISTER(internal_trusted_aead, CONFIG_SECURE_STORAGE_LOG_LEVEL);
 
 #include <string.h>
 

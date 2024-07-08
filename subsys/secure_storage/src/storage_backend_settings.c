@@ -14,7 +14,7 @@
 
 #include "storage_backend.h"
 
-LOG_MODULE_REGISTER(internal_trusted_storage_settings, CONFIG_TRUSTED_STORAGE_LOG_LEVEL);
+LOG_MODULE_REGISTER(internal_trusted_storage_settings, CONFIG_SECURE_STORAGE_LOG_LEVEL);
 
 /* Storage pattern: prefix, uid low, uid high, suffix */
 #define TRUSTED_STORAGE_SETTINGS_BACKEND_FILENAME_PATTERN "%s/%08x%08x"
