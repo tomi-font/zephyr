@@ -7,6 +7,8 @@
 LOG_MODULE_REGISTER(psa_its);
 
 #define SAMPLE_DATA_UID (psa_storage_uid_t)1
+#define SAMPLE_DATA_SIZE 16
+#define SAMPLE_DATA_FLAGS PSA_STORAGE_FLAG_NONE
 
 static int read_inexistent_uid(void)
 {
@@ -38,14 +40,11 @@ static int write_and_read_data(void)
 	psa_status_t ret;
 
 	/* Data to be written to ITS. */
-	uint8_t p_data_write[16];
-
-	/* Storage flags for the entry. */
-	const psa_storage_create_flags_t create_flags = PSA_STORAGE_FLAG_NONE;
+	uint8_t p_data_write[SAMPLE_DATA_SIZE];
 
 	memset(p_data_write, 0x42, sizeof(p_data_write));
 
-	ret = psa_its_set(SAMPLE_DATA_UID, sizeof(p_data_write), p_data_write, create_flags);
+	ret = psa_its_set(SAMPLE_DATA_UID, sizeof(p_data_write), p_data_write, SAMPLE_DATA_FLAGS);
 	if (ret != PSA_SUCCESS) {
 		LOG_ERR("Writing the data to ITS failed. (%d)", ret);
 		return -1;
@@ -82,6 +81,32 @@ static int write_and_read_data(void)
 	return 0;
 }
 
+static int read_info(void)
+{
+	LOG_INF("Verifying the written entry's metadata...");
+	psa_status_t ret;
+
+	/* The entry's metadata. */
+	struct psa_storage_info_t p_info;
+
+	ret = psa_its_get_info(SAMPLE_DATA_UID, &p_info);
+	if (ret != PSA_SUCCESS) {
+		LOG_ERR("Failed to retrieve the entry's metadata. (%d)", ret);
+		return -1;
+	}
+
+	if (p_info.capacity != SAMPLE_DATA_SIZE
+	 || p_info.size != SAMPLE_DATA_SIZE
+	 || p_info.flags != SAMPLE_DATA_FLAGS) {
+		LOG_ERR("Entry metadata unexpected. (capacity:%zu size:%zu flags:0x%x)",
+			p_info.capacity, p_info.size, p_info.flags);
+		return -1;
+	}
+
+	LOG_INF("Successfully verified the entry's metadata.");
+	return 0;
+}
+
 static int remove_entry(void)
 {
 	LOG_INF("Removing the entry from ITS...");
@@ -109,6 +134,10 @@ int main(void)
 	}
 
 	if (write_and_read_data()) {
+		return -1;
+	}
+
+	if (read_info()) {
 		return -1;
 	}
 
