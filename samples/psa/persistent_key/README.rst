@@ -1,74 +1,68 @@
-.. _crypto_persistent_key:
+.. zephyr:code-sample:: persistent_key
+   :name: Persistent key
 
-Crypto: Persistent key storage
-##############################
-
-.. contents::
-   :local:
-   :depth: 2
-
-The persistent key sample shows how to generate a persistent key using the Platform Security Architecture (PSA) APIs.
-Persistent keys are stored in the Internal Trusted Storage (ITS) of the device and retain their value between resets.
-The ITS backend is either provided by TF-M, or the :ref:`trusted_storage_readme` library when building applications without TF-M.
-A persistent key becomes unusable when the ``psa_destroy_key`` function is called.
-
-Requirements
-************
-
-The sample supports the following development kits:
-
-.. table-from-sample-yaml::
-
-.. include:: /includes/tfm.txt
+   Manage and use persistent keys via the Platform Security Architecture (PSA) Crypto API.
 
 Overview
 ********
 
-In this sample, an AES 128-bit key is created.
-Persistent keys can be of any type supported by the PSA APIs.
+This sample demonstrates how to use the :ref:`PSA Crypto API <psa_crypto>` to generate and use persistent keys.
 
-The sample performs the following operations:
-
-1. Initialization of the Platform Security Architecture (PSA) API.
-
-#. Generation of a persistent AES 128-bit key.
-
-#. Removal of the key from RAM.
-
-#. Encryption and decryption of a message using the key.
-
-#. Cleanup.
-   The AES key is removed from the PSA crypto keystore.
-
-.. note::
-   The read-only type of persistent keys cannot be destroyed with the ``psa_destroy_key`` function.
-   The ``PSA_KEY_PERSISTENCE_READ_ONLY`` macro is used for read-only keys.
-   The key ID of a read-only key is writable again after a full erase of the device memory.
-   Use the ``west -v flash --erase`` command for the full erase.
-
-Building and running
-********************
-
-.. |sample path| replace:: :file:`samples/crypto/persistent_key_usage`
-
-.. include:: /includes/build_and_run_ns.txt
-
-Testing
-=======
-
-After programming the sample to your development kit, complete the following steps to test it:
-
-1. |connect_terminal|
-#. Compile and program the application.
-#. Observe the logs from the application using a terminal emulator.
-
-Dependencies
+Requirements
 ************
 
-* PSA APIs:
+In addition to the PSA Crypto API, an implementation of the PSA Internal Trusted Storage (ITS) API (for storage of the persistent keys) must be present for this sample to work.
+It can be provided by:
 
-   * :file:`psa/crypto.h`
+* :ref:`tfm` (TF-M), for platforms supporting it.
+* The :ref:`secure storage subsystem <secure_storage>`, for the other platforms.
 
-* Builds without TF-M use the :ref:`trusted_storage_readme` library
+Building
+********
 
-   * The :ref:`lib_hw_unique_key` is used to encrypt the key before storing it.
+This sample is located in :zephyr_file:`samples/psa/persistent_key`.
+
+Different configurations are defined in the :file:`sample.yaml` file.
+You can use them to build the sample, depending on the platform to be built for, as follows:
+
+.. tabs::
+
+   .. tab:: TF-M
+
+     For platforms with TF-M:
+
+      .. zephyr-app-commands::
+         :zephyr-app: samples/psa/persistent_key
+         :tool: west
+         :goals: build
+         :board: <ns_platform>
+         :west-args: -T sample.psa.persistent_key.tfm
+
+   .. tab:: secure storage subsystem
+
+      If the platform to be compiled for has an entropy driver (preferable):
+
+      .. zephyr-app-commands::
+         :zephyr-app: samples/psa/persistent_key
+         :tool: west
+         :goals: build
+         :board: <platform>
+         :west-args: -T sample.psa.persistent_key.secure_storage.entropy_driver
+
+      Or, to use timer-based entropy (not secure):
+
+      .. zephyr-app-commands::
+         :zephyr-app: samples/psa/persistent_key
+         :tool: west
+         :goals: build
+         :board: <platform>
+         :west-args: -T sample.psa.persistent_key.secure_storage.entropy_not_secure
+
+To flash it, see :ref:`west-flashing`.
+
+References
+**********
+
+* `PSA Certified Crypto API <https://arm-software.github.io/psa-api/crypto/>`_
+
+* `PSA Certified Internal Trusted Storage API reference <https://arm-software.github.io/psa-api/storage/1.0/api/api.html#internal-trusted-storage-api>`_

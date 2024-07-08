@@ -1,55 +1,67 @@
-.. _crypto_psa_its:
+.. zephyr:code-sample:: psa_its
+   :name: PSA ITS
+   :relevant-api: psa_its
 
-Crypto: PSA ITS
-##############################
-
-.. contents::
-   :local:
-   :depth: 2
-
-This sample shows how to use the Platform Security Architecture (PSA) Internal Trusted Storage (ITS) APIs.
-
-Requirements
-************
-
-The sample supports the following development kits:
-
-.. table-from-sample-yaml::
-
-.. include:: /includes/tfm.txt
+   Use the Platform Security Architecture (PSA) Internal Trusted Storage (ITS) API.
 
 Overview
 ********
 
-Demonstration of how to use the PSA ITS APIs to store and retrieve data.
+This sample demonstrates how to use the PSA ITS API to store and retrieve persistent data.
 
-Building and running
-********************
-
-.. |sample path| replace:: :file:`samples/crypto/psa_its`
-
-.. include:: /includes/build_and_run_ns.txt
-
-.. note::
-   Use the ``west -v flash --erase`` command for the full erase.
-
-Testing
-=======
-
-After programming the sample to your development kit, complete the following steps to test it:
-
-1. |connect_terminal|
-#. Compile and program the application.
-#. Observe the logs from the application using a terminal emulator.
-
-Dependencies
+Requirements
 ************
 
-* PSA APIs:
+An implementation of the PSA ITS API must be present for this sample to build.
+It can be provided by:
 
-   * :file:`psa/crypto.h`
-   * :file:`psa/internal_trusted_storage.h`
+* :ref:`tfm` (TF-M), for platforms supporting it.
+* The :ref:`secure storage subsystem <secure_storage>`, for the other platforms.
 
-* Builds without TF-M use the :ref:`trusted_storage_readme` library
+Building
+********
 
-   * The :ref:`lib_hw_unique_key` may be used to encrypt the key before storing it.
+This sample is located in :zephyr_file:`samples/psa/its`.
+
+Different configurations are defined in the :file:`sample.yaml` file.
+You can use them to build the sample, depending on the platform to be built for, as follows:
+
+.. tabs::
+
+   .. tab:: TF-M
+
+     For platforms with TF-M:
+
+      .. zephyr-app-commands::
+         :zephyr-app: samples/psa/its
+         :tool: west
+         :goals: build
+         :board: <ns_platform>
+         :west-args: -T sample.psa.its.tfm
+
+   .. tab:: secure storage subsystem
+
+      If the platform to be compiled for has an entropy driver (preferable):
+
+      .. zephyr-app-commands::
+         :zephyr-app: samples/psa/its
+         :tool: west
+         :goals: build
+         :board: <platform>
+         :west-args: -T sample.psa.its.secure_storage.entropy_driver
+
+      Or, to use timer-based entropy (not secure):
+
+      .. zephyr-app-commands::
+         :zephyr-app: samples/psa/its
+         :tool: west
+         :goals: build
+         :board: <platform>
+         :west-args: -T sample.psa.its.secure_storage.entropy_not_secure
+
+To flash it, see :ref:`west-flashing`.
+
+References
+**********
+
+* `PSA Certified Internal Trusted Storage API reference <https://arm-software.github.io/psa-api/storage/1.0/api/api.html#internal-trusted-storage-api>`_
