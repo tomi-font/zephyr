@@ -3,6 +3,7 @@
 menuconfig SECURE_STORAGE
 	bool "Secure storage subsystem"
 	depends on !BUILD_WITH_TFM
+	select EXPERIMENTAL
 	help
 	  The secure storage subsystem allows securely storing data via the
 	  PSA Secure Storage API on platforms that don't already have an implementation of it.

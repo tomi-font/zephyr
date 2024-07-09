@@ -98,7 +98,7 @@ psa_status_t storage_get_object(const psa_storage_uid_t uid, const char *prefix,
 	char path[TRUSTED_STORAGE_SETTINGS_BACKEND_FILENAME_MAX_LENGTH + 1];
 	struct load_object_info info;
 	int ret;
-	psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+	psa_status_t status;
 
 	if (object_size == 0 || object_data == NULL || prefix == NULL) {
 		return PSA_ERROR_INVALID_ARGUMENT;
@@ -137,7 +137,7 @@ psa_status_t storage_get_object(const psa_storage_uid_t uid, const char *prefix,
 psa_status_t storage_set_object(const psa_storage_uid_t uid, const char *prefix,
 				const void *object_data, const size_t object_size)
 {
-	psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+	psa_status_t status;
 	char path[TRUSTED_STORAGE_SETTINGS_BACKEND_FILENAME_MAX_LENGTH + 1];
 
 	if (object_size == 0 || object_data == NULL || prefix == NULL) {
@@ -158,7 +158,7 @@ psa_status_t storage_set_object(const psa_storage_uid_t uid, const char *prefix,
 
 psa_status_t storage_remove_object(const psa_storage_uid_t uid, const char *prefix)
 {
-	psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+	psa_status_t status;
 	char path[TRUSTED_STORAGE_SETTINGS_BACKEND_FILENAME_MAX_LENGTH + 1];
 
 	if (prefix == NULL) {

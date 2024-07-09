@@ -1,48 +1,52 @@
-/*
- * Copyright (c) 2023 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
- */
+/* SPDX-License-Identifier: Apache-2.0 */
 
-/* This file includes common definitions for PSA storage
+/**
+ * @file psa/storage_common.h
+ * @defgroup psa_storage_common
+ * @brief Common definitions of the PSA Secure Storage API.
+ * @{
  */
-
 #ifndef PSA_STORAGE_COMMON_H
 #define PSA_STORAGE_COMMON_H
-
-#include <stddef.h>
-#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef uint32_t psa_storage_create_flags_t;
+#include <psa/error.h>
+#include <stddef.h>
 
+/* UID type for identifying entries. */
 typedef uint64_t psa_storage_uid_t;
 
-/* Flags */
+/* Flags used when creating an entry. */
+typedef uint32_t psa_storage_create_flags_t;
 
-#define PSA_STORAGE_FLAG_NONE		      0u
-#define PSA_STORAGE_FLAG_WRITE_ONCE	      (1u << 0)
+#define PSA_STORAGE_FLAG_NONE                 0u
+/* The data associated with the UID will not be able to be modified or deleted. */
+#define PSA_STORAGE_FLAG_WRITE_ONCE           (1u << 0)
+/* The data associated with the UID is public, requiring only integrity. Not supported. */
 #define PSA_STORAGE_FLAG_NO_CONFIDENTIALITY   (1u << 1)
+/* The data associated with the UID does not require replay protection. Not supported. */
 #define PSA_STORAGE_FLAG_NO_REPLAY_PROTECTION (1u << 2)
 
-/* A container for metadata associated with a specific uid */
-
+/* Metadata associated with a specific entry. */
 struct psa_storage_info_t {
+	/* The allocated capacity of the storage associated with an entry. */
 	size_t capacity;
+	/* The size of an entry's data. */
 	size_t size;
+	/* The flags used when the entry was created. */
 	psa_storage_create_flags_t flags;
 };
 
+/** Flag indicating that @ref psa_ps_create() and @ref psa_ps_set_extended() are supported. */
 #define PSA_STORAGE_SUPPORT_SET_EXTENDED (1u << 0)
-
-#define PSA_ERROR_INVALID_SIGNATURE ((psa_status_t)-149)
-#define PSA_ERROR_DATA_CORRUPT	    ((psa_status_t)-152)
 
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* PSA_STORAGE_COMMON_H */

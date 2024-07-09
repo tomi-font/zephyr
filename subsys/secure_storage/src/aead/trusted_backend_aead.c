@@ -74,7 +74,7 @@ psa_status_t trusted_get_info(const psa_storage_uid_t uid, const char *prefix,
 psa_status_t trusted_get(const psa_storage_uid_t uid, const char *prefix, size_t data_offset,
 			 size_t data_length, void *p_data, size_t *p_data_length)
 {
-	psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+	psa_status_t status;
 	uint8_t key_buf[AEAD_KEY_SIZE + 1];
 	size_t out_length;
 	stored_object object_data;
@@ -141,7 +141,7 @@ clean_up:
 psa_status_t trusted_set(const psa_storage_uid_t uid, const char *prefix, size_t data_length,
 			 const void *p_data, psa_storage_create_flags_t create_flags)
 {
-	psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+	psa_status_t status;
 	uint8_t key_buf[AEAD_KEY_SIZE + 1];
 	size_t out_length = 0;
 	stored_object object_data;
@@ -220,7 +220,7 @@ cleanup:
 
 psa_status_t trusted_remove(const psa_storage_uid_t uid, const char *prefix)
 {
-	psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+	psa_status_t status;
 	size_t out_length;
 	stored_object_header header;
 
