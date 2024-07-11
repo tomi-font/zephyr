@@ -4,13 +4,15 @@ menuconfig SECURE_STORAGE
 	bool "Secure storage subsystem"
 	depends on !BUILD_WITH_TFM
 	select EXPERIMENTAL
+	imply MBEDTLS_PSA_CRYPTO_STORAGE_C
 	help
-	  The secure storage subsystem allows securely storing data via the
-	  PSA Secure Storage API on platforms that don't already have an implementation of it.
-	  It is configurable with different backends for both securing and storing
-	  of the data to suit the varying capabilities of different platforms.
-	  The actual security provided depends on the security features that
-	  are available and used on a given platform.
+	  The secure storage subsystem allows securely storing data via the PSA Secure Storage API
+	  on platforms that don't already have an implementation of it.
+	  It provides its implementation of the PSA Internal Trusted Storage (ITS) API to the PSA
+	  Crypto API implementation, allowing the use of persistent keys with the PSA Crypto API.
+	  It is configurable with different backends for both the securing and storing of the data to suit the varying capabilities of different platforms.
+	  The actual security provided depends on the security features that are available and used
+	  on a given platform.
 
 if SECURE_STORAGE
 
@@ -18,42 +20,26 @@ module = SECURE_STORAGE
 module-str = secure_storage
 source "subsys/logging/Kconfig.template.log_config"
 
-menuconfig PSA_PROTECTED_STORAGE
-	bool "Protected Storage"
-	help
-	  The Protected Storage is designed to store critical assets.
-	  It supports several storage back-ends and several secure
-	  implementation back-ends to provide various levels of trust.
-
-if PSA_PROTECTED_STORAGE
-
-config PSA_PROTECTED_STORAGE_PREFIX
-	string "Protected Storage object prefix"
-	default "ps"
-	help
-	  This defines the prefix for Protected Storage object names.
-
-endif # PSA_PROTECTED_STORAGE
-
-menuconfig PSA_INTERNAL_TRUSTED_STORAGE
-	bool "Internal Trusted Storage"
-	default y
-	help
-	  The Internal Trusted Storage is designed to store critcal assets that
-	  must be placed inside internal flash. Some examples of assets that
-	  require this are replay protection values for external storage and
-	  keys for use by components of the PSA Root of Trust.
-
-if PSA_INTERNAL_TRUSTED_STORAGE
-
-config PSA_INTERNAL_TRUSTED_STORAGE_PREFIX
-	string "Internal Trusted Storage object prefix"
-	depends on PSA_INTERNAL_TRUSTED_STORAGE
+config SECURE_STORAGE_PSA_ITS_PREFIX
+	string "Internal Trusted Storage (ITS) object name prefix"
 	default "its"
-	help
-	  This defines the prefix for Internal Trusted Storage object names.
 
-endif # PSA_INTERNAL_TRUSTED_STORAGE
+config SECURE_STORAGE_PSA_PS_PREFIX
+	string "Protected Storage (PS) object name prefix"
+	default "ps"
+
+menuconfig SECURE_STORAGE_PSA_PS_IMPLEMENTATION
+	bool "Protected Storage API implementation"
+	help
+	  Whether an implementation of the PS API is present.
+	  If not, the PSA PS API will call into the ITS API.
+
+if SECURE_STORAGE_PSA_PS_IMPLEMENTATION
+
+config SECURE_STORAGE_PSA_PS_SUPPORT_SET_EXTENDED
+	bool "PSA PS API implementation supports psa_ps_create() and psa_ps_set_extended()"
+
+endif # SECURE_STORAGE_PSA_PS_IMPLEMENTATION
 
 choice TRUSTED_STORAGE_BACKEND
 	prompt "Secure storage backend"

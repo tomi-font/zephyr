@@ -11,7 +11,7 @@ LOG_MODULE_REGISTER(internal_trusted_aead, CONFIG_SECURE_STORAGE_LOG_LEVEL);
 
 #include <string.h>
 
-#include "../trusted_storage_backend.h"
+#include <zephyr/secure_storage/its.h>
 #include "../storage_backend.h"
 #include "aead_key.h"
 #include "aead_nonce.h"
@@ -33,8 +33,6 @@ LOG_MODULE_REGISTER(internal_trusted_aead, CONFIG_SECURE_STORAGE_LOG_LEVEL);
 #define STORAGE_MAX_ASSET_SIZE CONFIG_TRUSTED_STORAGE_BACKEND_AEAD_MAX_DATA_SIZE
 #define AEAD_MAX_BUF_SIZE      ROUND_UP(STORAGE_MAX_ASSET_SIZE + AEAD_TAG_SIZE, AEAD_TAG_SIZE)
 
-#define INVALID_UID 0U
-
 /** Header of stored object. Supplied as additional data when encrypting. */
 typedef struct stored_object_header {
 	psa_storage_create_flags_t create_flags;
@@ -47,16 +45,12 @@ typedef struct stored_object {
 	uint8_t data[AEAD_MAX_BUF_SIZE];
 } stored_object;
 
-psa_status_t trusted_get_info(const psa_storage_uid_t uid, const char *prefix,
+psa_status_t secure_storage_its_get_info(const char *prefix, const psa_storage_uid_t uid,
 			      struct psa_storage_info_t *p_info)
 {
 	psa_status_t status;
 	size_t out_length;
 	stored_object_header header;
-
-	if (p_info == NULL || uid == INVALID_UID) {
-		return PSA_ERROR_INVALID_ARGUMENT;
-	}
 
 	/* Get size & flags */
 	status = storage_get_object(uid, prefix, (void *)&header, sizeof(header), &out_length);
@@ -71,17 +65,14 @@ psa_status_t trusted_get_info(const psa_storage_uid_t uid, const char *prefix,
 	return PSA_SUCCESS;
 }
 
-psa_status_t trusted_get(const psa_storage_uid_t uid, const char *prefix, size_t data_offset,
-			 size_t data_length, void *p_data, size_t *p_data_length)
+psa_status_t secure_storage_its_get(const char *prefix, const psa_storage_uid_t uid,
+				    size_t data_offset, size_t data_length, void *p_data,
+				    size_t *p_data_length)
 {
 	psa_status_t status;
 	uint8_t key_buf[AEAD_KEY_SIZE + 1];
 	size_t out_length;
 	stored_object object_data;
-
-	if ((p_data == NULL && data_length != 0) || p_data_length == NULL || uid == INVALID_UID) {
-		return PSA_ERROR_INVALID_ARGUMENT;
-	}
 
 	if (data_length == 0) {
 		*p_data_length = 0;
@@ -138,17 +129,14 @@ clean_up:
 	return status;
 }
 
-psa_status_t trusted_set(const psa_storage_uid_t uid, const char *prefix, size_t data_length,
-			 const void *p_data, psa_storage_create_flags_t create_flags)
+psa_status_t secure_storage_its_set(const char *prefix, const psa_storage_uid_t uid,
+				    size_t data_length, const void *p_data,
+				    psa_storage_create_flags_t create_flags)
 {
 	psa_status_t status;
 	uint8_t key_buf[AEAD_KEY_SIZE + 1];
 	size_t out_length = 0;
 	stored_object object_data;
-
-	if (uid == INVALID_UID || (p_data == NULL && data_length != 0)) {
-		return PSA_ERROR_INVALID_ARGUMENT;
-	}
 
 	if (create_flags != PSA_STORAGE_FLAG_NONE && create_flags != PSA_STORAGE_FLAG_WRITE_ONCE) {
 		return PSA_ERROR_NOT_SUPPORTED;
@@ -218,15 +206,11 @@ cleanup:
 	return status;
 }
 
-psa_status_t trusted_remove(const psa_storage_uid_t uid, const char *prefix)
+psa_status_t secure_storage_its_remove(const char *prefix, const psa_storage_uid_t uid)
 {
 	psa_status_t status;
 	size_t out_length;
 	stored_object_header header;
-
-	if (uid == INVALID_UID) {
-		return PSA_ERROR_INVALID_ARGUMENT;
-	}
 
 	/* Get flags */
 	status = storage_get_object(uid, prefix, (void *)&header, sizeof(header), &out_length);
@@ -239,29 +223,4 @@ psa_status_t trusted_remove(const psa_storage_uid_t uid, const char *prefix)
 	}
 
 	return storage_remove_object(uid, prefix);
-}
-
-uint32_t trusted_get_support(void)
-{
-	return 0;
-}
-
-psa_status_t trusted_create(const psa_storage_uid_t uid, size_t capacity,
-			    psa_storage_create_flags_t create_flags)
-{
-
-	ARG_UNUSED(uid);
-	ARG_UNUSED(capacity);
-	ARG_UNUSED(create_flags);
-	return PSA_ERROR_NOT_SUPPORTED;
-}
-
-psa_status_t trusted_set_extended(const psa_storage_uid_t uid, size_t data_offset,
-				  size_t data_length, const void *p_data)
-{
-	ARG_UNUSED(uid);
-	ARG_UNUSED(data_offset);
-	ARG_UNUSED(data_length);
-	ARG_UNUSED(p_data);
-	return PSA_ERROR_NOT_SUPPORTED;
 }

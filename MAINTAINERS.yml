@@ -3924,6 +3924,7 @@ Secure storage:
     - tomi-font
   files:
     - subsys/secure_storage/
+    - include/zephyr/secure_storage/
     - samples/psa/
   labels:
     - "area: Secure storage"

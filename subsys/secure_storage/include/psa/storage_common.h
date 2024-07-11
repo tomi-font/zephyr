@@ -25,9 +25,9 @@ typedef uint32_t psa_storage_create_flags_t;
 #define PSA_STORAGE_FLAG_NONE                 0u
 /* The data associated with the UID will not be able to be modified or deleted. */
 #define PSA_STORAGE_FLAG_WRITE_ONCE           (1u << 0)
-/* The data associated with the UID is public, requiring only integrity. Not supported. */
+/* The data associated with the UID is public, requiring only integrity. */
 #define PSA_STORAGE_FLAG_NO_CONFIDENTIALITY   (1u << 1)
-/* The data associated with the UID does not require replay protection. Not supported. */
+/* The data associated with the UID does not require replay protection. */
 #define PSA_STORAGE_FLAG_NO_REPLAY_PROTECTION (1u << 2)
 
 /* Metadata associated with a specific entry. */
