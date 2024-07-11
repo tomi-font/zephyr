@@ -23,6 +23,7 @@ typedef int32_t psa_status_t;
 #define PSA_ERROR_NOT_PERMITTED        ((psa_status_t)-133)
 #define PSA_ERROR_NOT_SUPPORTED        ((psa_status_t)-134)
 #define PSA_ERROR_INVALID_ARGUMENT     ((psa_status_t)-135)
+#define PSA_ERROR_ALREADY_EXISTS       ((psa_status_t)-139)
 #define PSA_ERROR_DOES_NOT_EXIST       ((psa_status_t)-140)
 #define PSA_ERROR_INSUFFICIENT_STORAGE ((psa_status_t)-142)
 #define PSA_ERROR_STORAGE_FAILURE      ((psa_status_t)-146)
