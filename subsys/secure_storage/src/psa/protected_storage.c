@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 
 #include <psa/protected_storage.h>
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_IMPLEMENTATION
-#include <zephyr/secure_storage/ps.h>
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
+#include <zephyr/secure_storage/ps/implementation.h>
 #else
-#include <zephyr/secure_storage/its.h>
+#include <zephyr/secure_storage/its/internal.h>
 #endif
 #include "helpers.h"
 
@@ -12,66 +12,57 @@ psa_status_t psa_ps_set(psa_storage_uid_t uid, size_t data_length, const void *p
 			psa_storage_create_flags_t create_flags)
 
 {
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
 	if (!validate_uid(uid)
 	 || !validate_sized_ptr(data_length, p_data)) {
 		return PSA_ERROR_INVALID_ARGUMENT;
 	}
-
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_IMPLEMENTATION
-	return secure_storage_ps_set(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-				      uid, data_length, p_data, create_flags);
+	return secure_storage_ps_impl_set(uid, data_length, p_data, create_flags);
 #else
-	return secure_storage_its_set(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-				      uid, data_length, p_data, create_flags);
+	return secure_storage_its_set(uid, data_length, p_data, create_flags,
+				      SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_PS);
 #endif
 }
 
 psa_status_t psa_ps_get(psa_storage_uid_t uid, size_t data_offset, size_t data_size, void *p_data,
 			size_t *p_data_length)
 {
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
 	if (!validate_uid(uid)
 	 || !validate_sized_ptr(data_size, p_data)
 	 || !validate_ptr(p_data_length)) {
 		return PSA_ERROR_INVALID_ARGUMENT;
 	}
-
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_IMPLEMENTATION
-	return secure_storage_ps_get(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-				     uid, data_offset, data_size, p_data, p_data_length);
+	return secure_storage_ps_impl_get(uid, data_offset, data_size, p_data, p_data_length);
 #else
-	return secure_storage_its_get(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-				      uid, data_offset, data_size, p_data, p_data_length);
+	return secure_storage_its_get(uid, data_offset, data_size, p_data, p_data_length,
+				      SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_PS);
 #endif
 }
 
 psa_status_t psa_ps_get_info(psa_storage_uid_t uid, struct psa_storage_info_t *p_info)
 {
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
 	if (!validate_uid(uid)
 	 || !validate_ptr(p_info)) {
 		return PSA_ERROR_INVALID_ARGUMENT;
 	}
-
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_IMPLEMENTATION
-	return secure_storage_ps_get_info(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-					  uid, p_info);
+	return secure_storage_ps_impl_get_info(uid, p_info);
 #else
-	return secure_storage_its_get_info(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-					   uid, p_info);
+	return secure_storage_its_get_info(uid, p_info,
+					   SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_PS);
 #endif
 }
 
 psa_status_t psa_ps_remove(psa_storage_uid_t uid)
 {
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
 	if (!validate_uid(uid)) {
 		return PSA_ERROR_INVALID_ARGUMENT;
 	}
-
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_IMPLEMENTATION
-	return secure_storage_ps_remove(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-					uid);
+	return secure_storage_ps_impl_remove(uid);
 #else
-	return secure_storage_its_remove(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-					 uid);
+	return secure_storage_its_remove(uid, SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_PS);
 #endif
 }
 
@@ -79,7 +70,7 @@ uint32_t psa_ps_get_support(void)
 {
 	uint32_t flags = 0;
 
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_SUPPORT_SET_EXTENDED
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_SUPPORTS_SET_EXTENDED
 	flags |= PSA_STORAGE_SUPPORT_SET_EXTENDED;
 #endif
 	return flags;
@@ -88,12 +79,11 @@ uint32_t psa_ps_get_support(void)
 psa_status_t psa_ps_create(psa_storage_uid_t uid, size_t capacity,
 			   psa_storage_create_flags_t create_flags)
 {
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_SUPPORT_SET_EXTENDED
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_SUPPORTS_SET_EXTENDED
 	if (!validate_uid(uid)) {
 		return PSA_ERROR_INVALID_ARGUMENT;
 	}
-	return secure_storage_ps_create(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-					uid, capacity, create_flags);
+	return secure_storage_ps_impl_create(uid, capacity, create_flags);
 #else
 	(void)uid;
 	(void)capacity;
@@ -105,13 +95,12 @@ psa_status_t psa_ps_create(psa_storage_uid_t uid, size_t capacity,
 psa_status_t psa_ps_set_extended(psa_storage_uid_t uid, size_t data_offset, size_t data_length,
 				 const void *p_data)
 {
-#ifdef CONFIG_SECURE_STORAGE_PSA_PS_SUPPORT_SET_EXTENDED
+#ifdef CONFIG_SECURE_STORAGE_PSA_PS_SUPPORTS_SET_EXTENDED
 	if (!validate_uid(uid)
 	 || !validate_sized_ptr(data_length, p_data)) {
 		return PSA_ERROR_INVALID_ARGUMENT;
 	}
-	return secure_storage_ps_set_extended(CONFIG_SECURE_STORAGE_PSA_PS_PREFIX,
-					      uid, data_offset, data_length, p_data);
+	return secure_storage_ps_impl_set_extended(uid, data_offset, data_length, p_data);
 #else
 	(void)uid;
 	(void)data_offset;

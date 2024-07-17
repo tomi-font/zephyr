@@ -20,26 +20,26 @@ module = SECURE_STORAGE
 module-str = secure_storage
 source "subsys/logging/Kconfig.template.log_config"
 
-config SECURE_STORAGE_PSA_ITS_PREFIX
-	string "Internal Trusted Storage (ITS) object name prefix"
-	default "its"
-
-config SECURE_STORAGE_PSA_PS_PREFIX
-	string "Protected Storage (PS) object name prefix"
-	default "ps"
-
-menuconfig SECURE_STORAGE_PSA_PS_IMPLEMENTATION
-	bool "Protected Storage API implementation"
+config SECURE_STORAGE_PSA_ITS_CUSTOM_IMPLEMENTATION
+	bool "PSA Internal Trusted Storage (ITS) API custom implementation"
 	help
-	  Whether an implementation of the PS API is present.
-	  If not, the PSA PS API will call into the ITS API.
+	  Whether a custom implementation of the PSA ITS API is present.
+	  If not, the default implementation will be used.
 
-if SECURE_STORAGE_PSA_PS_IMPLEMENTATION
+menuconfig SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
+	bool "PSA Protected Storage (PS) API custom implementation"
+	help
+	  Whether a custom implementation of the PSA PS API is present.
+	  If not, the default implementation will be used.
+	  It calls directly into the PSA ITS API, resulting in the ITS and the PS being identical.
 
-config SECURE_STORAGE_PSA_PS_SUPPORT_SET_EXTENDED
+if SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
+
+config SECURE_STORAGE_PSA_PS_SUPPORTS_SET_EXTENDED
 	bool "PSA PS API implementation supports psa_ps_create() and psa_ps_set_extended()"
 
-endif # SECURE_STORAGE_PSA_PS_IMPLEMENTATION
+endif # SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
+
 
 choice TRUSTED_STORAGE_BACKEND
 	prompt "Secure storage backend"
