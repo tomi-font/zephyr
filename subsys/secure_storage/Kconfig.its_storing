@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: Apache-2.0
+
+choice SECURE_STORAGE_ITS_STORING_IMPLEMENTATION
+	prompt "ITS storing module implementation"
+
+config SECURE_STORAGE_ITS_STORING_IMPLEMENTATION_SETTINGS
+	bool "ITS storing module implementation using the settings subsystem for storage"
+	imply FLASH
+	imply FLASH_MAP
+	imply NVS
+	select SETTINGS
+
+config SECURE_STORAGE_ITS_STORING_IMPLEMENTATION_CUSTOM
+	bool "Custom ITS storing module implementation"
+	help
+	  Implement the secure_storage_its_storing_*() functions.
+
+endchoice # SECURE_STORAGE_ITS_STORING_IMPLEMENTATION
+
+if SECURE_STORAGE_ITS_STORING_IMPLEMENTATION_SETTINGS
+
+config SECURE_STORAGE_ITS_STORING_SETTINGS_PREFIX
+	string "Subtree in which to store the settings, with a trailing slash. Can be empty."
+	default "its/"
+
+config SECURE_STORAGE_ITS_STORING_SETTINGS_ENCRYPT_UID
+	bool "Encrypt the ITS entry UIDs"
+	depends on SECURE_STORAGE_ITS_SECURING_MODULE
+	default y if SECURE_STORAGE_ITS_SECURING_KEY_PROVIDER_DEFAULT
+	select PSA_WANT_KEY_TYPE_AES
+	select PSA_WANT_ALG_ECB_NO_PADDING
+	help
+	  Encrypt the UID of the stored entries with the key provided by the securing module.
+	  The entry UIDs are used in the names of the settings that store the data associated with
+	  an entry.
+	  This should be enabled when the default key provider is in use and no device ID is
+	  available (via the HW info API), in which case only the entry UIDs are used to generate
+	  keys. This is to avoid storing the entry UIDs in clear, in which case it would be trivial
+	  to find them and generate the keys used to encrypt the data.
+	  This doesn't provide much security by itself, just some more obfuscation.
+	  This is not needed if a more secure key is provided; the authenticity of the entry UIDs
+	  is checked by the default ITS implementation, not by this.
+
+endif # SECURE_STORAGE_ITS_STORING_IMPLEMENTATION_SETTINGS

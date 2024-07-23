@@ -8,9 +8,8 @@ menuconfig SECURE_STORAGE
 	help
 	  The secure storage subsystem allows securely storing data via the PSA Secure Storage API
 	  on platforms that don't already have an implementation of it.
-	  It provides its implementation of the PSA Internal Trusted Storage (ITS) API to the PSA
-	  Crypto API implementation, allowing the use of persistent keys with the PSA Crypto API.
-	  It is configurable with different backends for both the securing and storing of the data to suit the varying capabilities of different platforms.
+	  It also provides its implementation of the PSA Internal Trusted Storage (ITS) API to the PSA Crypto API implementation, allowing the use of persistent keys in the PSA Crypto API.
+	  It is configurable with different implementations for both the securing and storing of the data to suit the varying capabilities of different platforms.
 	  The actual security provided depends on the security features that are available and used
 	  on a given platform.
 
@@ -20,128 +19,72 @@ module = SECURE_STORAGE
 module-str = secure_storage
 source "subsys/logging/Kconfig.template.log_config"
 
-config SECURE_STORAGE_PSA_ITS_CUSTOM_IMPLEMENTATION
-	bool "PSA Internal Trusted Storage (ITS) API custom implementation"
+choice SECURE_STORAGE_ITS_IMPLEMENTATION
+	prompt "Internal Trusted Storage (ITS) API implementation"
+
+config SECURE_STORAGE_ITS_IMPLEMENTATION_DEFAULT
+	bool "Default ITS implementation"
+	select SECURE_STORAGE_ITS_SECURING_MODULE
+	select SECURE_STORAGE_ITS_STORING_MODULE
 	help
-	  Whether a custom implementation of the PSA ITS API is present.
-	  If not, the default implementation will be used.
+	  Use the default implementation of the ITS API.
+	  It calls the securing/storing modules, which can be configured
+	  and have custom implementations.
 
-menuconfig SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
-	bool "PSA Protected Storage (PS) API custom implementation"
+config SECURE_STORAGE_ITS_IMPLEMENTATION_CUSTOM
+	bool "Custom ITS implementation"
 	help
-	  Whether a custom implementation of the PSA PS API is present.
-	  If not, the default implementation will be used.
-	  It calls directly into the PSA ITS API, resulting in the ITS and the PS being identical.
+	  A custom implementation of the ITS API is present.
+	  The secure_storage_its_impl_*() functions must be implemented.
 
-if SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
+endchoice # SECURE_STORAGE_ITS_IMPLEMENTATION
 
-config SECURE_STORAGE_PSA_PS_SUPPORTS_SET_EXTENDED
-	bool "PSA PS API implementation supports psa_ps_create() and psa_ps_set_extended()"
-
-endif # SECURE_STORAGE_PSA_PS_CUSTOM_IMPLEMENTATION
-
-
-choice TRUSTED_STORAGE_BACKEND
-	prompt "Secure storage backend"
-	default TRUSTED_STORAGE_BACKEND_AEAD
+config SECURE_STORAGE_PS_IMPLEMENTATION_CUSTOM
+	bool "Custom Protected Storage (PS) API implementation"
 	help
-	  The backend that handles encryption, authentication or other means of
-	  validation of the stored assets.
+	  Whether a custom implementation of the PS API is present.
+	  If not, the default behavior of directly calling into the ITS API will be enabled.
+	  This means that the ITS and the PS will be identical.
+	  If providing a custom implementation, implement the secure_storage_ps_impl_*() functions.
 
-menuconfig TRUSTED_STORAGE_BACKEND_AEAD
-	bool "Use AEAD scheme"
+if SECURE_STORAGE_ITS_IMPLEMENTATION_DEFAULT
+
+config SECURE_STORAGE_ITS_MAX_DATA_SIZE
+	int "Maximum data size of an ITS entry in bytes"
+	default 64
 	help
-	  Use an AEAD scheme to encrypt the asset data and authenticate its
-	  data including the meta data.
+	  The maximum size, in bytes, that the data of an ITS entry can be.
+	  Increasing this value increases the stack usage when serving PSA ITS API calls.
 
-if TRUSTED_STORAGE_BACKEND_AEAD
+endif # SECURE_STORAGE_ITS_IMPLEMENTATION_DEFAULT
 
-config TRUSTED_STORAGE_BACKEND_AEAD_MAX_DATA_SIZE
-	int "AEAD backend maximum storage size"
-	default 256
+menuconfig SECURE_STORAGE_ITS_SECURING_MODULE
+	bool "ITS securing module"
 	help
-	  This defines the maximum data size that can be stored.
+	  The module that provides encryption and authentication-related functions.
+	  It is used by the default ITS API implementation.
 
-choice TRUSTED_STORAGE_BACKEND_AEAD_CRYPTO
-	prompt "AEAD algorithm crypto backend"
-	default TRUSTED_STORAGE_BACKEND_AEAD_CRYPTO_PSA_CHACHAPOLY
+if SECURE_STORAGE_ITS_SECURING_MODULE
+rsource "Kconfig.its_securing"
+endif
+
+menuconfig SECURE_STORAGE_ITS_STORING_MODULE
+	bool "ITS securing module"
 	help
-	  Decides which implementation to be used to perform the AEAD crypto
-	  operations.
+	  The module that handles storage/retrieval of the data to/from non-volatile memory.
+	  It is used by the default ITS API implementation.
 
-config TRUSTED_STORAGE_BACKEND_AEAD_CRYPTO_PSA_CHACHAPOLY
-	bool "PSA ChaChaPoly"
-	select PSA_WANT_ALG_CHACHA20_POLY1305
-	select PSA_WANT_KEY_TYPE_CHACHA20
+if SECURE_STORAGE_ITS_STORING_MODULE
+rsource "Kconfig.its_storing"
+endif
+
+if SECURE_STORAGE_PS_IMPLEMENTATION_CUSTOM
+
+config SECURE_STORAGE_PS_SUPPORTS_SET_EXTENDED
+	bool "PS API implementation supports psa_ps_create() and psa_ps_set_extended()"
 	help
-	  Use PSA Crypto API's with the ChaChaPoly-1305 AEAD algorithm.
+	  Whether the psa_ps_create() and psa_ps_set_extended() are implemented.
 
-endchoice # TRUSTED_STORAGE_BACKEND_AEAD_CRYPTO
-
-choice TRUSTED_STORAGE_BACKEND_AEAD_NONCE
-	prompt "AEAD nonce implementation"
-	default TRUSTED_STORAGE_BACKEND_AEAD_NONCE_PSA_SEED_COUNTER
-	help
-	  Implementation to provide a AEAD nonce.
-
-config TRUSTED_STORAGE_BACKEND_AEAD_NONCE_PSA_SEED_COUNTER
-	bool "PSA Nonce Seed + Counter"
-	select PSA_WANT_GENERATE_RANDOM
-	help
-	  Use PSA Crypto for Nonce initial random seed, then incrementing
-	  nonce for each AEAD encryption.
-
-config TRUSTED_STORAGE_BACKEND_AEAD_NONCE_CUSTOM
-	bool "Custom"
-	help
-	  Use custom implementation for AEAD Nonce provider.
-
-endchoice # TRUSTED_STORAGE_BACKEND_AEAD_NONCE
-
-choice TRUSTED_STORAGE_BACKEND_AEAD_KEY
-	prompt "AEAD Key implementation"
-	default TRUSTED_STORAGE_BACKEND_AEAD_KEY_HASH_UID
-	help
-	  Implementation to provide the AEAD keys.
-
-config TRUSTED_STORAGE_BACKEND_AEAD_KEY_HASH_UID
-	bool "Hash of UID"
-	select PSA_WANT_ALG_SHA_256
-	help
-	  Use the SHA-256 hash of the UID as the key. This option does not provide a very
-	  high level of security and should be used only if no better option is available.
-
-config TRUSTED_STORAGE_BACKEND_AEAD_KEY_CUSTOM
-	bool "Custom"
-	help
-	  Use custom implementation for AEAD key provider.
-
-endchoice # TRUSTED_STORAGE_BACKEND_AEAD_KEY
-
-endif # TRUSTED_STORAGE_BACKEND_AEAD
-
-endchoice # TRUSTED_STORAGE_BACKEND
-
-choice TRUSTED_STORAGE_STORAGE_BACKEND
-	prompt "Storage backend"
-	default TRUSTED_STORAGE_STORAGE_BACKEND_SETTINGS
-	help
-	  Implementation used to store the assets
-
-config TRUSTED_STORAGE_STORAGE_BACKEND_SETTINGS
-	bool "Settings storage backend"
-	select FLASH
-	select FLASH_MAP
-	select NVS
-	select SETTINGS
-	help
-	  Use the Settings subsystem with NVS to store the assets
-
-config TRUSTED_STORAGE_STORAGE_BACKEND_CUSTOM
-	bool "Custom storage backend"
-	help
-	  Use a custom-made backend to store data in the non-volatile memory.
-
-endchoice # CONFIG_TRUSTED_STORAGE_STORAGE_BACKEND
+endif # SECURE_STORAGE_PS_IMPLEMENTATION_CUSTOM
 
 endif # SECURE_STORAGE

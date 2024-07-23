@@ -9,10 +9,6 @@
 #ifndef PSA_STORAGE_COMMON_H
 #define PSA_STORAGE_COMMON_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <psa/error.h>
 #include <stddef.h>
 
@@ -43,10 +39,6 @@ struct psa_storage_info_t {
 /** Flag indicating that @ref psa_ps_create() and @ref psa_ps_set_extended() are supported. */
 #define PSA_STORAGE_SUPPORT_SET_EXTENDED (1u << 0)
 
-#ifdef __cplusplus
-}
-#endif
-
 /** @} */
 
-#endif /* PSA_STORAGE_COMMON_H */
+#endif

@@ -9,10 +9,6 @@
 #ifndef PSA_ERROR_H
 #define PSA_ERROR_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdint.h>
 
 typedef int32_t psa_status_t;
@@ -30,10 +26,6 @@ typedef int32_t psa_status_t;
 #define PSA_ERROR_INVALID_SIGNATURE    ((psa_status_t)-149)
 #define PSA_ERROR_DATA_CORRUPT         ((psa_status_t)-152)
 
-#ifdef __cplusplus
-}
-#endif
-
 /** @} */
 
-#endif /* PSA_ERROR_H */
+#endif

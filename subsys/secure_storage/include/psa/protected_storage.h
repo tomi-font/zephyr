@@ -9,10 +9,6 @@
 #ifndef PSA_PROTECTED_STORAGE_H
 #define PSA_PROTECTED_STORAGE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <psa/storage_common.h>
 
 #define PSA_PS_API_VERSION_MAJOR 1
@@ -159,10 +155,6 @@ psa_status_t psa_ps_set_extended(psa_storage_uid_t uid, size_t data_offset, size
  */
 uint32_t psa_ps_get_support(void);
 
-#ifdef __cplusplus
-}
-#endif
-
 /** @} */
 
-#endif /* PSA_PROTECTED_STORAGE_H */
+#endif

@@ -36,10 +36,9 @@
  */
 psa_status_t psa_its_set(psa_storage_uid_t uid, size_t data_length, const void *p_data,
 			 psa_storage_create_flags_t create_flags);
-
 #define psa_its_set(uid, data_length, p_data, create_flags) \
-	secure_storage_its_set(uid, data_length, p_data, create_flags, \
-			       SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS)
+	secure_storage_its_set(uid, SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS, \
+			       data_length, p_data, create_flags)
 
 /**
  * @brief Retrieves data associated with the provided `uid`.
@@ -60,10 +59,9 @@ psa_status_t psa_its_set(psa_storage_uid_t uid, size_t data_length, const void *
  */
 psa_status_t psa_its_get(psa_storage_uid_t uid, size_t data_offset, size_t data_size, void *p_data,
 			 size_t *p_data_length);
-
 #define psa_its_get(uid, data_offset, data_size, p_data, p_data_length) \
-	secure_storage_its_get(uid, data_offset, data_size, p_data, p_data_length, \
-			       SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS)
+	secure_storage_its_get(uid, SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS, \
+			       data_offset, data_size, p_data, p_data_length)
 
 /**
  * @brief Retrieves the metadata of a given entry.
@@ -78,9 +76,8 @@ psa_status_t psa_its_get(psa_storage_uid_t uid, size_t data_offset, size_t data_
  * @retval PSA_ERROR_STORAGE_FAILURE  The physical storage has failed (fatal error).
  */
 psa_status_t psa_its_get_info(psa_storage_uid_t uid, struct psa_storage_info_t *p_info);
-
 #define psa_its_get_info(uid, p_info) \
-	secure_storage_its_get_info(uid, p_info, SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS)
+	secure_storage_its_get_info(uid, SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS, p_info)
 
 /**
  * @brief Removes the provided `uid` and its associated data.
@@ -96,10 +93,9 @@ psa_status_t psa_its_get_info(psa_storage_uid_t uid, struct psa_storage_info_t *
  * @retval PSA_ERROR_STORAGE_FAILURE  The physical storage has failed (fatal error).
  */
 psa_status_t psa_its_remove(psa_storage_uid_t uid);
-
 #define psa_its_remove(uid) \
 	secure_storage_its_remove(uid, SECURE_STORAGE_ITS_CALLER_ZEPHYR_PSA_ITS)
 
 /** @} */
 
-#endif /* PSA_INTERNAL_TRUSTED_STORAGE_H */
+#endif
