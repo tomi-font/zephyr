@@ -32,7 +32,7 @@ if !SOC_FLASH_NRF_RADIO_SYNC_NONE
 
 config SOC_FLASH_NRF_TIMEOUT_MULTIPLIER
 	int "Multiplier for flash operation timeouts [x0.1]"
-	default 15 if SOC_FLASH_NRF_RRAM || \
+	default 15 if SOC_FLASH_NRF_RRAM || FLASH_IRONSIDE_TE_RRAM || \
 		(SOC_FLASH_NRF && SOC_FLASH_NRF_PARTIAL_ERASE && SOC_FLASH_NRF_RADIO_SYNC_TICKER)
 	default 10 if SOC_FLASH_NRF
 	help
