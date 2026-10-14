@@ -39,7 +39,7 @@ static psa_status_t hash_data_into_key(
 
 #ifdef CONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_PROVIDER_DEVICE_ID_HASH
 
-psa_status_t secure_storage_its_transform_aead_get_key(
+psa_status_t secure_storage_its_transform_aead_get_key_material(
 		secure_storage_its_uid_t uid,
 		uint8_t key[static CONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_SIZE])
 {
@@ -70,7 +70,7 @@ psa_status_t secure_storage_its_transform_aead_get_key(
 
 #elif defined(CONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_PROVIDER_ENTRY_UID_HASH)
 
-psa_status_t secure_storage_its_transform_aead_get_key(
+psa_status_t secure_storage_its_transform_aead_get_key_material(
 		secure_storage_its_uid_t uid,
 		uint8_t key[static CONFIG_SECURE_STORAGE_ITS_TRANSFORM_AEAD_KEY_SIZE])
 {
