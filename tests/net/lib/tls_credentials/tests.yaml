@@ -28,7 +28,9 @@ tests:
     tags:
       - secure_storage.psa
   net.tls_credentials.protected_storage.secure_storage.parse_crt:
+    # The certificate is an RSA one, which IronSide TE does not handle.
     filter: CONFIG_SECURE_STORAGE and not CONFIG_SECURE_STORAGE_ITS_STORE_IMPLEMENTATION_NONE
+      and not CONFIG_PSA_CRYPTO_PROVIDER_IRONSIDE_TE
     extra_args: EXTRA_CONF_FILE="ps_secure_storage.conf;parse_crt.conf"
     platform_exclude: *secure_storage_platform_exclude
     tags:
