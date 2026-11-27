@@ -13,6 +13,7 @@ tests:
     integration_platforms:
       - weact_stm32wb55_core
       - nrf54lm20dk/nrf54lm20a/cpuapp
+      - nrf54lm20dk/nrf54lm20a/cpuapp/ite
   sample.authentication.fido2.no_usb:
     build_only: true
     platform_allow:

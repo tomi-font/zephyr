@@ -203,7 +203,7 @@ manifest:
       groups:
         - hal
     - name: hal_nordic
-      revision: 36ffe23f3461974f1591bdcbe42f18b727b9c735
+      revision: pull/399/head
       path: modules/hal/nordic
       groups:
         - hal
@@ -274,7 +274,7 @@ manifest:
       groups:
         - hal
     - name: hal_ti
-      revision: ce3c8f7624d8e8b517947ebe942b5d20c625a9e8
+      revision: 5e2cb42ecb5c3dbf8eed8e96b8d52248c5e06797
       path: modules/hal/ti
       groups:
         - hal
@@ -325,7 +325,7 @@ manifest:
       revision: c9ffd4692de246eb911c7ba49b78a331b2c63c74
       path: modules/lib/gui/lvgl
     - name: mbedtls
-      revision: c43f34b93797e81fd0257c30004dcd0ae332ae51
+      revision: pull/101/head
       path: modules/crypto/mbedtls
       groups:
         - crypto
@@ -339,11 +339,6 @@ manifest:
       groups:
         - debug
       revision: 5a9d6055b62edc54566d6d0034d9daec91749b98
-    - name: mldsa-native
-      revision: 3fc19982839305d305071f0de0c540bc9c9bea8a
-      path: modules/crypto/mldsa-native
-      groups:
-        - crypto
     - name: nanopb
       revision: 0f6d088e777a33dd7b54297f137ef10d745c5da8
       path: modules/lib/nanopb
@@ -393,7 +388,7 @@ manifest:
         - testing
         - tee
     - name: tf-psa-crypto
-      revision: 765af96a20a2b408474dcd950372ba9af4d26b62
+      revision: 2fe4a69cb578123ec919f7a102ef417a6ef1cbd8
       path: modules/crypto/tf-psa-crypto
       groups:
         - crypto

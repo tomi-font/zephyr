@@ -16,8 +16,10 @@ tests:
       - nrf54l15dk/nrf54l15/cpuapp
       - nrf54l15dk/nrf54l15/cpuflpr
       - nrf54lm20dk/nrf54lm20a/cpuapp
+      - nrf54lm20dk/nrf54lm20a/cpuapp/ite
       - nrf54lm20dk/nrf54lm20a/cpuflpr
       - nrf54lm20dk/nrf54lm20b/cpuapp
+      - nrf54lm20dk/nrf54lm20b/cpuapp/ite
       - nrf54lm20dk/nrf54lm20b/cpuflpr
       - nrf54lv10dk/nrf54lv10a/cpuapp
       - nrf54lv10dk/nrf54lv10a/cpuflpr
@@ -135,8 +137,10 @@ tests:
       - nrf54l15dk/nrf54l15/cpuapp
       - nrf54l15dk/nrf54l15/cpuflpr
       - nrf54lm20dk/nrf54lm20a/cpuapp
+      - nrf54lm20dk/nrf54lm20a/cpuapp/ite
       - nrf54lm20dk/nrf54lm20a/cpuflpr
       - nrf54lm20dk/nrf54lm20b/cpuapp
+      - nrf54lm20dk/nrf54lm20b/cpuapp/ite
       - nrf54lm20dk/nrf54lm20b/cpuflpr
       - nrf54lv10dk/nrf54lv10a/cpuapp
       - nrf7120dk/nrf7120/cpuapp
@@ -157,8 +161,10 @@ tests:
       - nrf54l15dk/nrf54l15/cpuapp
       - nrf54l15dk/nrf54l15/cpuflpr
       - nrf54lm20dk/nrf54lm20a/cpuapp
+      - nrf54lm20dk/nrf54lm20a/cpuapp/ite
       - nrf54lm20dk/nrf54lm20a/cpuflpr
       - nrf54lm20dk/nrf54lm20b/cpuapp
+      - nrf54lm20dk/nrf54lm20b/cpuapp/ite
       - nrf54lm20dk/nrf54lm20b/cpuflpr
       - nrf54lv10dk/nrf54lv10a/cpuapp
       - nrf7120dk/nrf7120/cpuapp
@@ -186,6 +192,16 @@ tests:
     extra_configs:
       - CONFIG_NRF_SYS_EVENT=y
       - CONFIG_SOC_NRF_FORCE_CONSTLAT=y
+  drivers.uart.uart_elementary.lp_mspm0:
+    filter: CONFIG_SERIAL_SUPPORT_INTERRUPT
+    platform_allow:
+      - lp_mspm0g3507
+      - lp_mspm0g3519
+      - lp_mspm0l2228
+    integration_platforms:
+      - lp_mspm0g3507
+      - lp_mspm0g3519
+      - lp_mspm0l2228
   drivers.uart.uart_elementary.build_gd32:
     build_only: true
     harness: ""

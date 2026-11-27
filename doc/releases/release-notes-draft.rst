@@ -82,6 +82,18 @@ Libraries / Subsystems
     :c:member:`i3c_config_controller.tcas_ps` and the ``tcas-ps`` controller
     Devicetree property.
 
+* Libc
+
+  * ``zephyr_write_stdout()`` no longer converts LF to CRLF. Backends that
+    convert on their own, such as the UART and EFI consoles, now receive a
+    single LF and emit one CRLF. With Newlib, ARCMWDT and the Picolibc POSIX
+    ``write()`` path the duplicated carriage return (CR CR LF) is gone;
+    Picolibc's ``printf()`` output is unchanged.
+
+  * ``printf()`` output to backends that pass bytes through, such as RTT, RAM
+    console, semihosting, the IPM console sender, WCH SDI, whisper and the
+    Bluetooth monitor, is now LF-only, matching ``printk()``.
+
 * LoRaWAN
 
   * The native backend now supports the KR920, AS923 and US915 regions
@@ -111,6 +123,11 @@ Libraries / Subsystems
   * HTTP server: HTTPS services no longer run the TLS handshake inside ``accept()``. A client that
     opens a connection and then stalls its handshake used to stop the whole server, HTTP services
     included, for up to :kconfig:option:`CONFIG_NET_SOCKETS_TLS_CONNECT_TIMEOUT` per connection.
+  * The native network stack runs its protocol timers and deferred work on a dedicated work queue
+    instead of the system work queue, so that a slow system work queue item no longer delays DHCP,
+    Neighbor Discovery, address conflict detection or DNS timeouts, and the stack no longer holds
+    up other system work queue users. See :kconfig:option:`CONFIG_NET_DEDICATED_WORKQUEUE` and the
+    :ref:`migration guide <migration_4.6>`.
   * The connection manager tracks name resolution readiness, see
     :ref:`conn_mgr_monitoring_dns`: :c:macro:`NET_EVENT_L4_DNS_READY`,
     :c:macro:`NET_EVENT_L4_DNS_LOST` and :c:func:`conn_mgr_dns_is_ready`.
@@ -130,7 +147,8 @@ Libraries / Subsystems
   * Added the :ref:`STUN <stun_interface>` library, a codec for the messages of
     :rfc:`8489` with the attributes of ICE (:rfc:`8445`): parsing, building,
     MESSAGE-INTEGRITY, FINGERPRINT and the address attributes. A device finds out
-    its public address with the Binding transaction or the blocking socket client.
+    its public address with the Binding transaction, the blocking socket client
+    or the ``net stun`` shell commands.
 
   * OCPP: the charge point can authenticate to the central system with HTTP Basic
     authentication (:kconfig:option:`CONFIG_OCPP_BASIC_AUTH`), with the credentials set in the
@@ -256,6 +274,13 @@ Other notable changes
   * GIC v3 LPI and ITS tables use bounded static storage, making their memory requirements
     predictable at build time and allowing initialization without a system heap. See the
     :ref:`migration guide <migration_4.6>` for capacity sizing and heap configuration changes.
+
+* Kernel
+
+  * Threads can be created pinned to CPU 0 by default instead of being allowed on all CPUs, with
+    :kconfig:option:`CONFIG_SCHED_CPU_MASK_DEFAULT_SINGLE_CPU`. A thread's mask can be widened with
+    :c:func:`k_thread_cpu_mask_enable` while it is not runnable (before it is started, or while
+    it is blocked or suspended).
 
 ..
   Any more descriptive subsystem or driver changes. Do you really want to write

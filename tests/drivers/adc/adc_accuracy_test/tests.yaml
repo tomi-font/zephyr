@@ -59,7 +59,9 @@ tests:
       - nrf54h20dk/nrf54h20/cpuapp
       - nrf54l15dk/nrf54l15/cpuapp
       - nrf54lm20dk/nrf54lm20a/cpuapp
+      - nrf54lm20dk/nrf54lm20a/cpuapp/ite
       - nrf54lm20dk/nrf54lm20b/cpuapp
+      - nrf54lm20dk/nrf54lm20b/cpuapp/ite
       - nrf54lv10dk/nrf54lv10a/cpuapp
       - nrf54lv10dk/nrf54lv10a/cpuapp/ns
       - nrf7120dk/nrf7120/cpuapp
@@ -80,6 +82,7 @@ tests:
       - pic32cx_sg41_cult
       - sam_e54_xpro
       - pic32cm_jh01_cpro
+      - pic32cm_gc00_cpro
       - ek_ra8d2/r7ka8d2kflcac/cm85
       - ek_ra8m2/r7ka8m2jflcac/cm85
       - ek_ra8p1/r7ka8p1kflcac/cm85
@@ -93,6 +96,7 @@ tests:
       - platform:pic32cz_ca80_cult/pic32cz8110ca80208:"DTC_OVERLAY_FILE=boards/pic32cz_ca80_cult_ref.overlay"
       - platform:pic32cz_ca90_cult/pic32cz8110ca90208:"DTC_OVERLAY_FILE=boards/pic32cz_ca90_cult_ref.overlay"
       - platform:pic32cm_jh01_cpro/pic32cm5164jh01100:"DTC_OVERLAY_FILE=boards/pic32cm_jh01_cpro_ref.overlay"
+      - platform:pic32cm_gc00_cpro/pic32cm5112gc00100:"DTC_OVERLAY_FILE=boards/pic32cm_gc00_cpro_ref.overlay"
     integration_platforms:
       - frdm_kl25z
       - nrf54l15dk/nrf54l15/cpuapp
